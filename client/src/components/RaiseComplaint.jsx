@@ -14,9 +14,9 @@ const LandingPage = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
-  const [geoLocation, setGeoLocation] = useState("");
+  const [geoLocation, setGeoLocation] = useState(null);  // store geolocation as null initially
 
-  // Access webcam
+  // Access webcam and fetch geolocation
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then((stream) => {
@@ -26,19 +26,23 @@ const LandingPage = () => {
       })
       .catch((err) => console.error("Error accessing webcam: ", err));
 
-    // Fetch user location
+    // Check if geolocation is available and fetch location
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          setGeoLocation(`${lat}, ${lon}`);
+          setGeoLocation(`${lat}, ${lon}`);  // Set geolocation if access granted
         },
-        (error) => console.error("Error fetching location:", error),
+        (error) => {
+          console.error("Error fetching location:", error);
+          setGeoLocation(null);  // Clear geolocation if access is denied or error occurs
+        },
         { enableHighAccuracy: true }
       );
     } else {
       console.error("Geolocation not supported.");
+      setGeoLocation(null);  // Ensure geoLocation is empty if geolocation is not supported
     }
   }, []);
 
@@ -51,7 +55,6 @@ const LandingPage = () => {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageDataUrl = canvas.toDataURL("image/png");
 
-      // Convert the data URL into a Blob and then into a File object
       const byteString = atob(imageDataUrl.split(',')[1]);
       const arrayBuffer = new ArrayBuffer(byteString.length);
       const uintArray = new Uint8Array(arrayBuffer);
@@ -63,16 +66,21 @@ const LandingPage = () => {
       const file = new Blob([uintArray], { type: "image/png" });
       const fileObject = new File([file], "captured-image.png", { type: "image/png" });
 
-      setCapturedImage(fileObject);  // Store the image file
-
-      return fileObject; // Return the file object
+      setCapturedImage(fileObject);
+      return fileObject;
     }
     return null;
   };
 
   // Handle urgent report submission
   const handleReportUrgently = async () => {
-    const image = captureImage(); // Capture image on button click
+    // Check if geolocation is available before submitting
+    if (!geoLocation) {
+      message.error("Geolocation access is required to submit the report.");
+      return;
+    }
+
+    const image = captureImage();
 
     if (!image) {
       message.error("Image capture failed. Please try again.");
@@ -80,8 +88,8 @@ const LandingPage = () => {
     }
 
     const formData = new FormData();
-    formData.append("file", image);  // Now appending the file object
-    formData.append("location", geoLocation || "Location Not Available");
+    formData.append("file", image);
+    formData.append("location", geoLocation);  // Add geolocation if available
 
     try {
       const response = await fetch("http://localhost:5000/api/emergency", {
@@ -91,7 +99,7 @@ const LandingPage = () => {
 
       const result = await response.json();
       if (response.ok) {
-        message.success(result.message);
+        message.success("Form submitted successfully.");
       } else {
         message.error(result.message);
       }
@@ -104,6 +112,12 @@ const LandingPage = () => {
   const handleFIRSubmit = async () => {
     if (!complaint.subject || !complaint.description) {
       message.error("Subject and description are required.");
+      return;
+    }
+
+    // Check if geolocation is available before submitting
+    if (!geoLocation) {
+      message.error("Geolocation is required to submit the FIR.");
       return;
     }
 
@@ -122,7 +136,7 @@ const LandingPage = () => {
 
       const result = await response.json();
       if (response.ok) {
-        message.success(result.message);
+        message.success("FIR submitted successfully.");
       } else {
         message.error(result.message);
       }
@@ -133,7 +147,6 @@ const LandingPage = () => {
 
   return (
     <Layout className="min-h-screen bg-[#0A192F] text-white">
-      {/* Navbar */}
       <Header className="bg-[#112240] flex justify-between items-center px-6 shadow-lg border-b border-gray-600">
         <div className="text-xl font-bold text-white">Vigilant AI</div>
         <Menu theme="dark" mode="horizontal" className="bg-[#112240] text-white border-none">
@@ -149,9 +162,7 @@ const LandingPage = () => {
         </Menu>
       </Header>
 
-      {/* Hero Section */}
       <Content className="px-10 py-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-        {/* Webcam Section */}
         <div className="flex flex-col items-center w-full">
           <h2 className="text-xl font-semibold mb-2 text-white">📷 Report Immediately</h2>
           <video ref={videoRef} autoPlay playsInline className="w-full h-[500px] rounded-lg border border-gray-600" />
@@ -160,8 +171,8 @@ const LandingPage = () => {
             Report Urgently
           </Button>
         </div>
-  {/* FIR Form Section */}
-  <div className="bg-[#112240] p-6 rounded-lg shadow-md w-full max-h-[500px] overflow-y-auto no-scrollbar">
+
+        <div className="bg-[#112240] p-6 rounded-lg shadow-md w-full max-h-[500px] overflow-y-auto no-scrollbar">
           <h2 className="text-3xl font-bold text-white mb-6">📝 File an FIR</h2>
           <p className="text-gray-400">Submit an FIR anonymously or with full details.</p>
           <div className="mt-4">
@@ -241,12 +252,9 @@ const LandingPage = () => {
             Submit FIR
           </Button>
         </div>
-       
       </Content>
     </Layout>
   );
 };
 
 export default LandingPage;
-
-

@@ -13,6 +13,29 @@ app.use(express.json());
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+
+// Reverse Geocoding API (Using OpenStreetMap)
+app.get("/api/reverse-geocode", async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "Latitude and Longitude are required!" });
+    }
+
+    const response = await axios.get(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+
+    if (response.data && response.data.display_name) {
+      res.json({ address: response.data.display_name });
+    } else {
+      res.status(404).json({ error: "Address not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch address" });
+  }
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -99,6 +122,59 @@ app.post("/api/emergency", upload.single("file"), async (req, res) => {
     res.status(201).json({ message: "Emergency reported successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error reporting emergency", error });
+  }
+});
+
+
+// API to Retrieve All Reports (For Dashboard)
+app.get("/api/reports", async (req, res) => {
+  try {
+    const reports = await Report.find();
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching reports", error });
+  }
+});
+
+// API to Retrieve All Emergency Reports (For Dashboard)
+app.get("/api/emergency", async (req, res) => {
+  try {
+    const emergencies = await Emergency.find();
+    res.status(200).json(emergencies);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching emergencies", error });
+  }
+});
+
+// Contact Schema
+const ContactSchema = new mongoose.Schema({
+  name: String,
+  subject: String,
+  message: String,
+  email: String,
+  contact: String
+});
+
+const Contact = mongoose.model("Contact", ContactSchema);
+
+// API Route to Submit Form
+app.post("/api/contact", async (req, res) => {
+  try {
+    const newMessage = new Contact(req.body);
+    await newMessage.save();
+    res.status(201).json({ message: "Message sent successfully!" });
+  } catch (err) {
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// GET: Retrieve All Contact Data (For Dashboard)
+app.get("/api/contact", async (req, res) => {
+  try {
+    const contacts = await Contact.find();
+    res.status(200).json(contacts);
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Error fetching contacts." });
   }
 });
 
