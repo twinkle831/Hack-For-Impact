@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@heygen/streaming-avatar": "^2.0.10",
     "@react-three/fiber": "^9.1.0",
     "@react-three/xr": "^6.6.9",
     "@truffle/contract": "^4.6.31",
@@ -30,6 +31,7 @@
     "react-leaflet": "^5.0.0",
     "react-player": "^2.16.0",
     "react-router-dom": "^7.3.0",
+    "react-speech-recognition": "^4.0.0",
     "react-tooltip": "^5.28.0",
     "recharts": "^2.15.1",
     "three": "^0.174.0",

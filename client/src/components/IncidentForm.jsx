@@ -4,6 +4,7 @@ import getWeb3 from '../utils/web3';
 import getContract from '../utils/contract';
 import { ethers } from "ethers";
 import { keccak256, toUtf8Bytes } from "ethers";
+import "./IncidentForm.css"
 const IncidentForm = () => {
   const [formData, setFormData] = useState({
     incidentType: '',

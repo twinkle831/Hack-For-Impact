@@ -10,6 +10,7 @@ import RaiseComplaint from "./components/RaiseComplaint";
 import ContactUs from "./components/Contactus";
 import Dashboard from "./components/Dashboard";
 import LocationDecoder from "./components/LocationDecoder";
+import LegalAdvisorAvatar from "./components/AvatarDemo";
 
 function App() {
   const [web3, setWeb3] = useState(null);
@@ -60,6 +61,7 @@ function App() {
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai" element={<LocationDecoder />} />
+          <Route path="/legal-assistance" element={<LegalAdvisorAvatar />} />
           <Route
             path="/complain"
             element={
@@ -78,9 +80,9 @@ function App() {
           </div>
         )}
 
-        <footer>
+        {/* <footer>
           <p>System Admin: {adminAddress}</p>
-        </footer>
+        </footer> */}
       </div>
     </Router>
   );
