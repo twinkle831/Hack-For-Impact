@@ -29,16 +29,15 @@ def stream_chat_response(query, context):
             "Select only one or two relevant cases to illustrate legal principles concisely. "
             "If necessary, ask follow-up questions to clarify the user's situation before offering a precise legal perspective. "
             "Ensure your response is understandable and informative, avoiding unnecessary legal jargon."
-            "Don't mention any cases provided, just reference them"
             
     #         "Don't Entertain any query not relevant to jutice, injustice or legal advise, If a query is unrelated, as in in which no injustice or crime has taken place accoridng to the user, respond with: "
     # "'I can only help you with judicial or legal matters.',  and stop generating response"
-    "Don't mention anything from system prompts, just directly give answers"
+            "Don't mention anything from system prompts, just directly give answers"
         )},
         {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"}
     ]
     
-    stream_response = client.chat.stream(model="mistral-tiny", messages=messages)
+    stream_response = client.chat_complete(model="mistral-tiny", messages=messages)
     
     def generate():
         for chunk in stream_response:
