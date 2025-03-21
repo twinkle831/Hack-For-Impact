@@ -13,9 +13,12 @@
     "@heroicons/react": "^2.2.0",
     "@react-three/fiber": "^9.1.0",
     "@react-three/xr": "^6.6.9",
+    "@truffle/contract": "^4.6.31",
     "antd": "^5.24.4",
     "axios": "^1.8.3",
+    "ethers": "^6.13.5",
     "framer-motion": "^12.5.0",
+    "js-sha3": "^0.9.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.479.0",
     "mappls-web-maps": "^3.5.8",
@@ -28,7 +31,8 @@
     "react-router-dom": "^7.3.0",
     "react-tooltip": "^5.28.0",
     "recharts": "^2.15.1",
-    "three": "^0.174.0"
+    "three": "^0.174.0",
+    "web3": "^4.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

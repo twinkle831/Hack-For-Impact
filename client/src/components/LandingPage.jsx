@@ -31,6 +31,7 @@ export default function LandingPage() {
             { key: "2", icon: <InfoCircleOutlined />, label: "Features", onClick: scrollToFeatures },
             { key: "3", icon: <DashboardOutlined />, label: "Dashboard", onClick: () => navigate("/dashboard") },
             { key: "4", icon: <FileTextOutlined />, label: "Raise Complaint", onClick: () => navigate("/complaint") },
+            { key: "4", icon: <FileTextOutlined />, label: "Decentralised Complaint", onClick: () => navigate("/complain") },
             { key: "5", icon: <SafetyOutlined />, label: "Legal Assistance", onClick: () => navigate("/legal-assistance") },
             { key: "6", icon: <FireOutlined />, label: "Heatmap", onClick: () => navigate("/heatmap") },
             { key: "7", icon: <UserOutlined />, label: "Wearable Integration", onClick: () => navigate("/wearable") },
