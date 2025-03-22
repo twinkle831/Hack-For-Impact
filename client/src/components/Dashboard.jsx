@@ -16,9 +16,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const contactRes = await axios.get("http://localhost:5000/api/contact");
-        const reportRes = await axios.get("http://localhost:5000/api/reports");
-        const emergencyRes = await axios.get("http://localhost:5000/api/emergency");
+        const contactRes = await axios.get("http://localhost:10000/api/contact");
+        const reportRes = await axios.get("http://localhost:10000/api/reports");
+        const emergencyRes = await axios.get("http://localhost:10000/api/emergency");
 
         setContacts(contactRes.data);
         setReports(reportRes.data);
@@ -89,7 +89,7 @@ const Dashboard = () => {
                     <p><strong>📝 Description:</strong> {report.description}</p>
                     <p><strong>📩 Email:</strong> {report.email}</p>
                     <p><strong>📞 Contact:</strong> {report.contact || "N/A"}</p>
-                    {report.fileUrl && <img src={`http://localhost:5000${report.fileUrl}`} alt="Report File" className="mt-2 w-full h-40 object-cover rounded-lg" />}
+                    {report.fileUrl && <img src={`http://localhost:10000${report.fileUrl}`} alt="Report File" className="mt-2 w-full h-40 object-cover rounded-lg" />}
                   </Card>
                 ))
               ) : (
@@ -107,7 +107,7 @@ const Dashboard = () => {
                 emergencies.map((emergency, index) => (
                   <Card key={index} className="bg-[#112240] text-white border-none shadow-lg p-4">
                     <p><strong>📍 Location:</strong> {emergency.location}</p>
-                    {emergency.fileUrl && <img src={`http://localhost:5000${emergency.fileUrl}`} alt="Emergency File" className="mt-2 w-full h-40 object-cover rounded-lg" />}
+                    {emergency.fileUrl && <img src={`http://localhost:10000${emergency.fileUrl}`} alt="Emergency File" className="mt-2 w-full h-40 object-cover rounded-lg" />}
                   </Card>
                 ))
               ) : (

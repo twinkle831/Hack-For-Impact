@@ -11,6 +11,7 @@ import ContactUs from "./components/Contactus";
 import Dashboard from "./components/Dashboard";
 import LocationDecoder from "./components/LocationDecoder";
 import LegalAdvisorAvatar from "./components/AvatarDemo";
+import FitbitIntegration from "./components/WearableDevice";
 
 function App() {
   const [web3, setWeb3] = useState(null);
@@ -62,6 +63,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai" element={<LocationDecoder />} />
           <Route path="/legal-assistance" element={<LegalAdvisorAvatar />} />
+          <Route path="/wearable" element={<FitbitIntegration />} />
+
           <Route
             path="/complain"
             element={
