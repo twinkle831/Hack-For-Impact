@@ -32,6 +32,7 @@ scripted_model_path = hf_hub_download(repo_id=repo_id, filename=filename)
 model = torch.jit.load(scripted_model_path, map_location=device)
 model.to(device)
 model.eval()
+
 from collections import Counter
 def prediction(pth):
     frame_predictions = []
