@@ -12,6 +12,7 @@ import Dashboard from "./components/Dashboard";
 import LocationDecoder from "./components/LocationDecoder";
 import LegalAdvisorAvatar from "./components/AvatarDemo";
 import FitbitIntegration from "./components/WearableDevice";
+import Live from "./components/Live";
 
 function App() {
   const [web3, setWeb3] = useState(null);
@@ -58,6 +59,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/heatmap" element={<CrimeHotspotPage />} />
+          <Route path="/live" element={<Live />} />
           <Route path="/complaint" element={<RaiseComplaint />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/dashboard" element={<Dashboard />} />

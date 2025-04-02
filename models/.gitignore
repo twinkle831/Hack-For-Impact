@@ -1,4 +1,3 @@
 .env
 crime_model_scripted.pt
 crime_model_epoch_5.pth
-crim_tcn_jit.pt

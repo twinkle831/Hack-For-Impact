@@ -1,65 +1,49 @@
 from flask import Flask, request, jsonify
 import torch
-import torch.nn as nn
 import cv2
 from PIL import Image
 from collections import Counter
 import torchvision.transforms as transforms
 import os
-app = Flask(__name__)
-from huggingface_hub import hf_hub_download
 import time
+
+app = Flask(__name__)
+
 RESOLUTION = 224 
+CLASS_MAPPING = {
+    0: "Abuse",
+    1: "Arrest",
+    2: "Arson",
+    3: "Assault",
+    4: "Burglary",
+    5: "Explosion",
+    6: "Fighting",
+    7: "Normal"
+}
 
 transformer = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5], std=[0.5]),
     transforms.Resize((RESOLUTION, RESOLUTION))
 ])
-num_classes = 8
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-"""scripted_model_path = "crime_tcn_jit.pt" 
-model = torch.jit.load(scripted_model_path, map_location=device)
-model.to(device)
-model.eval()"""
-from huggingface_hub import hf_hub_download
-import torch
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-repo_id = "namban4123/crimemodel"  
-filename = "crime_tcn_jit.pt" 
-scripted_model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+# repo_id = "namban4123/crimemodel"  
+# filename = "crime_tcn_jit.pt" 
+# scripted_model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+scripted_model_path = "crime_tcn_jit.pt"
 model = torch.jit.load(scripted_model_path, map_location=device)
 model.to(device)
 model.eval()
 
-from collections import Counter
-def prediction(pth):
-    frame_predictions = []
-    cap = cv2.VideoCapture(pth)
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
-        Y_channel, _, _ = cv2.split(frame_yuv)
-        pil_frame = Image.fromarray(Y_channel)
-        input_tensor = transformer(pil_frame)
-        input_tensor = input_tensor.unsqueeze(0) 
-        with torch.no_grad():
-            outputs = model(input_tensor.to(device))
-            predicted = outputs.argmax(dim=1).item()
-            frame_predictions.append(predicted) 
-    cap.release()
-    return Counter(frame_predictions).most_common(1)[0][0]
 def preprocess_frame(frame):
     frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
     Y_channel, _, _ = cv2.split(frame_yuv)
     pil_frame = Image.fromarray(Y_channel)
     input_tensor = transformer(pil_frame)
-    return input_tensor.unsqueeze(0) 
+    return input_tensor.unsqueeze(0)
+
 def infer_video(video_path):
-    
     cap = cv2.VideoCapture(video_path)
     frame_predictions = []
     start_time = time.time()
@@ -77,13 +61,14 @@ def infer_video(video_path):
     
     cap.release()
     
-    final_prediction = Counter(frame_predictions).most_common(1)[0][0]
-    inference_time = time.time() - start_time
-    
-    return final_prediction, inference_time
+    if frame_predictions:
+        final_prediction = Counter(frame_predictions).most_common(1)[0][0]
+        return CLASS_MAPPING[final_prediction], time.time() - start_time
+    else:
+        return "Unknown", time.time() - start_time
+
 @app.route('/predict', methods=['POST'])
 def predict():
-    
     if 'video' not in request.files:
         return jsonify({"error": "No video file provided"}), 400
     
@@ -99,37 +84,36 @@ def predict():
         "inference_time": inference_time
     })
 
-"""if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)"""
 def live_inference():
-    
-    cap = cv2.VideoCapture(0)  
-
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Unable to access the webcam.")
         return
-
+    
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Error: Unable to retrieve frame from webcam.")
             break
+        
         start_time = time.time()
         input_tensor = preprocess_frame(frame)
         with torch.no_grad():
-            outputs = model(input_tensor.to(device))
-            predicted = outputs.argmax(dim=1).item()
+            output = model(input_tensor.to(device))
+            predicted = output.argmax(dim=1).item()
         inference_time = time.time() - start_time
-
-        overlay_text = f"Pred: {predicted} | {inference_time:.2f}s"
+        
+        overlay_text = f"Pred: {CLASS_MAPPING.get(predicted, 'Unknown')} | {inference_time:.2f}s"
         cv2.putText(frame, overlay_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (0, 255, 0), 2, cv2.LINE_AA)
-
+        
         cv2.imshow("Live Inference - Press 'q' to exit", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
+    
     cap.release()
     cv2.destroyAllWindows()
+
 if __name__ == '__main__':
-    live_inference()
+    app.run(host="0.0.0.0", port=5000)
+    # live_inference()  # Uncomment to run live inference instead

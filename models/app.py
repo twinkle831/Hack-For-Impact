@@ -6,12 +6,19 @@ from collections import Counter
 import torchvision.transforms as transforms
 import os
 import time
+from threading import Thread
 
 app = Flask(__name__)
 
 RESOLUTION = 224 
+transformer = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5], std=[0.5]),
+    transforms.Resize((RESOLUTION, RESOLUTION))
+])
 
-CLASS_MAPPING = {
+num_classes = 8
+class_labels = {
     0: "Abuse",
     1: "Arrest",
     2: "Arson",
@@ -22,19 +29,12 @@ CLASS_MAPPING = {
     7: "Normal"
 }
 
-transformer = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5], std=[0.5]),
-    transforms.Resize((RESOLUTION, RESOLUTION))
-])
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # repo_id = "namban4123/crimemodel"  
 # filename = "crime_tcn_jit.pt" 
 # scripted_model_path = hf_hub_download(repo_id=repo_id, filename=filename)
 
-# Load the model from local file
-scripted_model_path = "crime_tcn_jit.pt"
+scripted_model_path = "crime_tcn_jit.pt"  # Ensure this file is available
 model = torch.jit.load(scripted_model_path, map_location=device)
 model.to(device)
 model.eval()
@@ -70,7 +70,7 @@ def infer_video(video_path):
     final_prediction = Counter(frame_predictions).most_common(1)[0][0]
     inference_time = time.time() - start_time
     
-    return CLASS_MAPPING.get(final_prediction, "Unknown"), inference_time
+    return class_labels.get(final_prediction, "Unknown"), inference_time
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -88,6 +88,42 @@ def predict():
         "predicted_class": prediction,
         "inference_time": inference_time
     })
+
+def live_inference():
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Unable to access the webcam.")
+        return
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Unable to retrieve frame from webcam.")
+            break
+        
+        start_time = time.time()
+        input_tensor = preprocess_frame(frame)
+        with torch.no_grad():
+            outputs = model(input_tensor.to(device))
+            predicted = outputs.argmax(dim=1).item()
+        inference_time = time.time() - start_time
+        
+        overlay_text = f"Pred: {class_labels.get(predicted, 'Unknown')} | {inference_time:.2f}s"
+        cv2.putText(frame, overlay_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (0, 255, 0), 2, cv2.LINE_AA)
+
+        cv2.imshow("Live Inference - Press 'q' to exit", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    cap.release()
+    cv2.destroyAllWindows()
+
+@app.route('/start_live', methods=['GET'])
+def start_live():
+    thread = Thread(target=live_inference)
+    thread.start()
+    return jsonify({"message": "Live inference started."})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
