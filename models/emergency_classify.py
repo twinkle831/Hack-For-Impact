@@ -7,7 +7,7 @@ from mistralai.models import UserMessage
 
 # Load FAISS vector store
 vector_store = FAISS.load_local(
-    "models/faiss_legal_db",
+    "faiss_fir_db",
     HuggingFaceEmbeddings(model_name="BAAI/bge-small-en"),
     allow_dangerous_deserialization=True
 )
@@ -56,7 +56,7 @@ def classify_fir():
     # Get emergency level
     emergency_level = classify_emergency(subject, description, context)
     
-    return jsonify({"subject": subject, "description": description, "emergency_level": emergency_level})
+    return jsonify({"emergency_level": emergency_level})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

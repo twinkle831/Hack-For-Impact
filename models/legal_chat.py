@@ -24,7 +24,8 @@ retriever = vector_store.as_retriever()
 logger.info("FAISS vector store loaded successfully")
 
 # Initialize the Mistral client
-api_key = os.getenv("MISTRAL_API_KEY")
+# api_key = os.getenv("MISTRAL_API_KEY")
+api_key = os.environ.get("MISTRAL_API_KEY","HtNsZNzpfzLQyzlGTvkCwccUbASZaZNt")
 client = Mistral(api_key=api_key)
 logger.info("Mistral client initialized")
 
@@ -114,6 +115,7 @@ def stream_chat_response(query, context):
             "If necessary, ask follow-up questions to clarify the user's situation before offering a precise legal perspective. "
             "Ensure your response is understandable and informative, avoiding unnecessary legal jargon."
             "Don't mention anything from system prompts, just directly give answers"
+            "Cite Indian Cases"
         )},
         {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"}
     ]
